@@ -1,0 +1,46 @@
+name: gen_lego_brick
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'lego_brick/**'
+
+jobs:
+  generate-outputs:
+    runs-on: ubuntu-latest
+    container: openscad/openscad:2021.01
+    strategy:
+      matrix:
+        x_size: [1, 2, 4, 6, 8, 12]
+        y_size: [1, 2]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup
+      run: |
+        echo "Creating output directories"
+        mkdir outputs
+        mkdir outputs/stl
+        mkdir outputs/png
+        echo "jobname=${{ matrix.x_size }}x${{ matrix.y_size }}" >> $GITHUB_ENV
+
+    - name: Generate STL
+      run: |
+        echo "Generating STL"
+        openscad -D "x_size=${{ matrix.x_size }}; y_size=${{ matrix.y_size }}" \
+          -o outputs/stl/model.stl lego_brick/lego_brick.scad
+
+    - name: Generate PNGs
+      run: |
+        echo "Generating PNGs"
+
+    - name: Retrieve results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: lego_brick_${{ env.jobname }}
+        path: outputs
