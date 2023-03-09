@@ -31,12 +31,16 @@ jobs:
     - name: Generate STL
       run: |
         echo "Generating STL"
-        openscad -D "x_size=${{ matrix.x_size }}; y_size=${{ matrix.y_size }}" \
+        openscad -D "x_size=${{ matrix.x_size }};y_size=${{ matrix.y_size }}" \
           -o outputs/stl/model.stl lego_brick/lego_brick.scad
 
     - name: Generate PNGs
       run: |
         echo "Generating PNGs"
+        for rot in `seq 0 20 180`; do
+          openscad -D "x_size=${{ matrix.x_size }};y_size=${{ matrix.y_size }};rotation=$rot" \
+          -o outputs/png/image_$rot.png lego_brick/lego_brick.scad
+        done
 
     - name: Retrieve results
       if: always()
