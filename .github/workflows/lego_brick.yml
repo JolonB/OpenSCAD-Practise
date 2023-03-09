@@ -37,6 +37,7 @@ jobs:
     - name: Generate PNGs
       run: |
         echo "Generating PNGs"
+        Xvfb :99 & export DISPLAY=:99
         for rot in `seq 0 20 180`; do
           openscad -D "x_size=${{ matrix.x_size }};y_size=${{ matrix.y_size }};rotation=$rot" \
           -o outputs/png/image_$rot.png lego_brick/lego_brick.scad
