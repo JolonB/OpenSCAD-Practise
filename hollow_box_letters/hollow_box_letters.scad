@@ -1,25 +1,30 @@
+use <fontmetrics.scad>;
+
 cube_size = 45;
 cube_wall_thickness = 3;
 text_border_margin = 3;  // outer
 text_border_padding = 2; // inner
 characters = "ABCD";
+letter_font="Liberation Mono:style=Bold"; // TODO change to Nimbus Mono or similar
 
 assert(cube_size > 2 * cube_wall_thickness);
 assert(len(characters) == 4);
 
-function to_uppercase_char(c) = (c >= "a" && c <= "z") ? chr(ord(c) - 32) : c;
-
 module letter (character, size, center=[0,0,0], rotation=[0,0,0]) {
     char_len = len(character);
     assert(char_len == 1, str("A letter cannot contain more than one character. '", character, "' contains ", char_len));
-    character = to_uppercase_char(character);
+    character = uppercaseChar(character);
+
+    char_bounds = measureTextBounds(character, font=letter_font, size=size);
+    corner_pos = char_bounds[0];
+    dimensions = char_bounds[1];
 
     translate_shift = text_border_margin + text_border_padding;
     translate(center)
     rotate(rotation)
     linear_extrude(0.2)
-    translate([-size/2,-size/2])
-    text(character, size, font="Lato:style=Bold"); // TODO change to monospaced font
+    translate(-corner_pos - dimensions/2)
+    text(character, font=letter_font, size=size);
 }
 
 module hollow_cube(size, wall_thickness) {
