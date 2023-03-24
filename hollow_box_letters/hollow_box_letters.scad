@@ -2,7 +2,7 @@ use <fontmetrics.scad>;
 
 cube_size = 45;
 cube_wall_thickness = 3;
-text_border_margin = 3;  // outer
+text_border_margin = 1;  // outer
 text_border_padding = 2; // inner
 border_thickness = 0.5;
 text_depth = 0.2;
@@ -29,10 +29,10 @@ module letter (character, size, center=[0,0,0], rotation=[0,0,0]) {
     text(character, font=letter_font, size=size);
 }
 
-module border (inner_size, thickness, depth, center=[0,0,0], rotation=[0,0,0]) {
+module border (inner_size, thickness, center=[0,0,0], rotation=[0,0,0]) {
     translate(center)
     rotate(rotation)
-    linear_extrude(depth)
+    linear_extrude(text_depth)
     difference() {
         square(inner_size + thickness, center=true);
         square(inner_size, center=true);
@@ -59,15 +59,17 @@ module letter_cube (size, wall_thickness) {
 let (
         translate_shift = text_border_margin + text_border_padding + border_thickness,
         letter_size = cube_size-2*translate_shift,
-        letter_shift = cube_size/2
+        letter_shift = cube_size/2,
+        border_size = cube_size - text_border_thickness
     ) {
         for (i = [0:3]) {
             angle = i * 90;
             x_shift = cos(angle) * letter_shift;
             y_shift = sin(angle) * letter_shift;
-            translation = [x_shift, y_shift, letter_shift];
+            center = [x_shift, y_shift, letter_shift];
             rotation = [0, 90, angle];
-            letter(characters[i], letter_size, center=translation, rotation=rotation);
+            letter(characters[i], letter_size, center=center, rotation=rotation);
+            border(border_size, border_thickness, center=center, rotation=rotation);
         }
 }
 
