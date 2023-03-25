@@ -21,74 +21,74 @@ module letter (character, size, font, depth, center=[0,0,0], rotation=[0,0,0]) {
     ) {
     translate(center)
     rotate(rotation)
+    translate([0, 0, -depth])
     linear_extrude(depth)
     translate(-corner_pos - dimensions/2)
     text(character, font=font, size=size);
     }
 }
 
-module border (inner_size, thickness, depth, center=[0,0,0], rotation=[0,0,0]) {
-    translate(center)
-    rotate(rotation)
-    linear_extrude(depth)
-    difference() {
-        square(inner_size + thickness, center=true);
-        square(inner_size, center=true);
-    }
-}
+function rotated_center(angle, center_offset) = [
+        [
+            cos(angle) * center_offset,
+            sin(angle) * center_offset,
+            center_offset
+        ], [
+            0, 90, angle
+        ]
+];
 
-module hollow_cube (size, wall_thickness) {
+function rotated_centers(center_offset) = [
+    for (i=[0:3])
+    rotated_center(i*90, center_offset)
+];
+
+module bordered_cube(size, border_thickness, indent_depth) {
     difference() {
-        cube(size);
-        let (inner_size = size - 2*wall_thickness) {
-            translate([wall_thickness, wall_thickness, wall_thickness])
-            cube([inner_size, inner_size, size-wall_thickness]);
+        translate([0, 0, cube_size/2])
+        cube(cube_size, center=true);
+
+        for (center_rotation = rotated_centers(size/2)) {
+            center = center_rotation[0];
+            rotation = center_rotation[1];
+            inner_size = size - 2*border_thickness;
+            translate(center)
+            rotate(rotation)
+            translate([0, 0, -indent_depth/2])
+            cube([inner_size, inner_size, indent_depth], center=true);
         }
     }
 }
 
 
-module bordered_letter(character, letter_size, border_thickness, border_padding, depth, font, center=[0,0,0], rotation=[0,0,0]) {
-    union() {
-        letter(character, letter_size, font=font, depth=depth, center=center, rotation=rotation);
-        border(letter_size + 2*border_padding, border_thickness, depth=depth, center=center, rotation=rotation);
-    }
-}
-
-
 module letter_cube(
-        characters, cube_size, border_margin, border_thickness, border_padding,
-        depth=TEXT_DEPTH, font=LETTER_FONT) {
+        characters, cube_size, border_thickness, border_padding, depth=TEXT_DEPTH, font=LETTER_FONT
+) {
+    assert(border_thickness + border_padding < cube_size);
     assert(len(characters) == 4);
+
     color("white")
-    translate([-cube_size/2, -cube_size/2, 0])
-    cube(cube_size);
+    bordered_cube(cube_size, border_thickness, depth);
 
     let (
-            outline_size = border_margin + border_padding + border_thickness,
-            letter_size = cube_size-2*outline_size,
+            letter_size = cube_size-2*(border_padding + border_thickness),
             letter_centering = cube_size/2
-        ) {
-            for (i = [0:3]) {
-                angle = i * 90;
-                x_shift = cos(angle) * letter_centering;
-                y_shift = sin(angle) * letter_centering;
-                center = [x_shift, y_shift, letter_centering];
-                rotation = [0, 90, angle];
-                bordered_letter(
-                    characters[i], letter_size, border_thickness, border_padding,
-                    depth=depth, font=font, center=center, rotation=rotation
-                );
-            }
+    ) {
+        color("black")
+        for (i = [0:3]) {
+            center_rotation = rotated_center(i*90, letter_centering);
+            center = center_rotation[0];
+            rotation = center_rotation[1];
+            letter(characters[i], letter_size, font, depth, center=center, rotation=rotation);
+        }
     }
 }
 
 // TEST //
 
-characters = "ABCD";
+characters = "AMOG";
 cube_size = 45;
-text_border_margin = 3;  // outer
+text_border_margin = 6;  // outer
 text_border_padding = 4; // inner
-text_border_thickness = 1.5;
 
-letter_cube(characters, cube_size, text_border_margin, text_border_thickness, text_border_padding);
+letter_cube(characters, cube_size, text_border_margin, text_border_padding);
