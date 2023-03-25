@@ -39,7 +39,7 @@ jobs:
       run: |
         echo "Generating PNGs"
         Xvfb :99 & export DISPLAY=:99
-        for rot in `seq 0 20 180`; do
+        for rot in `seq 0 20 360`; do
           openscad -D "${{ env.settings }};rotation=$rot" \
           -o outputs/png/image_$rot.png letter_block/letter_block_config.scad
         done
