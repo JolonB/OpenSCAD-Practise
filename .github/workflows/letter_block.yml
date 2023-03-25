@@ -25,8 +25,7 @@ jobs:
         mkdir outputs
         mkdir outputs/stl
         mkdir outputs/png
-        echo "settings=characters=\\\"${{ matrix.letters }}\\\";cube_size=45;" \
-              "border_margin=2;border_thickness=0.8;border_padding=1.5" >> $GITHUB_ENV
+        echo "settings=characters=\\\"${{ matrix.letters }}\\\";cube_size=45;" >> $GITHUB_ENV
         echo "jobname=${{ matrix.letters }}" >> $GITHUB_ENV
 
     - name: Generate STL
@@ -41,7 +40,8 @@ jobs:
         Xvfb :99 & export DISPLAY=:99
         for rot in `seq 0 20 360`; do
           openscad -D "${{ env.settings }};rotation=$rot" \
-          -o outputs/png/image_$rot.png letter_block/letter_block_config.scad
+          -o outputs/png/image_$rot.png --render true \
+          letter_block/letter_block_config.scad
         done
 
     - name: Retrieve results
