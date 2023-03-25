@@ -1,0 +1,52 @@
+name: gen_letter_block
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'letter_block/**'
+
+jobs:
+  generate-outputs:
+    runs-on: ubuntu-latest
+    container: openscad/openscad:2021.01
+    strategy:
+      matrix:
+        letters: ['ABCD', '1234', 'TN5O', 'PLQW', 'LSEC', 'VYMI', 'ENTS', 'MHFG', 'UOIE', "AEIO"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup
+      run: |
+        echo "Creating output directories"
+        mkdir outputs
+        mkdir outputs/stl
+        mkdir outputs/png
+        echo "settings=characters=\\\"${{ matrix.letters }}\\\";cube_size=45;" \
+              "border_margin=2;border_thickness=0.8;border_padding=1.5" >> $GITHUB_ENV
+        echo "jobname=${{ matrix.letters }}" >> $GITHUB_ENV
+
+    - name: Generate STL
+      run: |
+        echo "Generating STL"
+        openscad -D "${{ env.settings }}" \
+          -o outputs/stl/model.stl letter_block/letter_block_config.scad
+
+    - name: Generate PNGs
+      run: |
+        echo "Generating PNGs"
+        Xvfb :99 & export DISPLAY=:99
+        for rot in `seq 0 20 360`; do
+          openscad -D "${{ env.settings }};rotation=$rot" \
+          -o outputs/png/image_$rot.png letter_block/letter_block_config.scad
+        done
+
+    - name: Retrieve results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: letter_block_${{ env.jobname }}
+        path: outputs
